@@ -2,13 +2,11 @@
   <artifact type="jar" name="pdf_merge:jar">
     <output-path>$PROJECT_DIR$/out/artifacts/pdf_merge_jar</output-path>
     <root id="archive" name="pdf_merge.jar">
-      <element id="directory" name="META-INF">
-        <element id="file-copy" path="$PROJECT_DIR$/src/main/java/META-INF/MANIFEST.MF" />
-      </element>
       <element id="module-output" name="pdf_merge" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/commons-logging/commons-logging/1.2/commons-logging-1.2.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/apache/pdfbox/pdfbox/3.0.0-RC1/pdfbox-3.0.0-RC1.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/com/beust/jcommander/1.81/jcommander-1.81.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/apache/pdfbox/fontbox/3.0.0-RC1/fontbox-3.0.0-RC1.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/apache/pdfbox/pdfbox/3.0.0-RC1/pdfbox-3.0.0-RC1.jar" path-in-jar="/" />
     </root>
   </artifact>
 </component>

@@ -10,6 +10,8 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 
+import ch.feomathar.pdfmerge.Main;
+
 public class Args {
 
     private static final String DEFAULT_OUTPUT = "out.pdf";
@@ -24,17 +26,23 @@ public class Args {
     private boolean force = false;
 
     @Parameter(names = "-h", description = "Display this message", help = true, order = 10)
-    private String help;
+    private boolean help;
 
     public static Args parse(String... args) throws ExistingOutputException {
         Args parsed = new Args();
-        JCommander.newBuilder().addObject(parsed).build().parse(args);
+        JCommander cmder = JCommander.newBuilder().addObject(parsed).build();
+        cmder.setProgramName(Main.getProgramName());
+        cmder.parse(args);
+        if (parsed.isHelp()) {
+            cmder.usage();
+            System.exit(0);
+        }
         parsed.validate();
         return parsed;
     }
 
     private void validate() throws ExistingOutputException {
-        if (new File(getOutputName()).exists() && !isForce()){
+        if (new File(getOutputName()).exists() && !isForce()) {
             throw new ExistingOutputException();
         }
     }
@@ -49,6 +57,10 @@ public class Args {
 
     public boolean isForce() {
         return force;
+    }
+
+    public boolean isHelp() {
+        return help;
     }
 
     public static String getDefaultOutputName() {

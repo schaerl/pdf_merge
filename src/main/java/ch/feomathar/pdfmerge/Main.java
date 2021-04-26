@@ -14,6 +14,8 @@ import ch.feomathar.pdfmerge.args.ExistingOutputException;
 
 public class Main {
 
+    private static final String PROGRAM_NAME = "pdf_merge";
+
     public static void main(String[] args) {
         try {
             Args parsed = Args.parse(args);
@@ -32,6 +34,10 @@ public class Main {
 
         System.out.println("File(s) merged successfully");
         System.exit(0);
+    }
+
+    public static String getProgramName() {
+        return PROGRAM_NAME;
     }
 
     private static class PDFMerger {
