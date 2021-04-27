@@ -7,10 +7,10 @@ import java.util.List;
 import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
 
-import com.beust.jcommander.ParameterException;
+import com.beust.jcommander.JCommander;
 
 import ch.feomathar.pdfmerge.args.Args;
-import ch.feomathar.pdfmerge.args.ExistingOutputException;
+import ch.feomathar.pdfmerge.args.ArgsValidationException;
 
 public class Main {
 
@@ -18,26 +18,24 @@ public class Main {
 
     public static void main(String[] args) {
         try {
-            Args parsed = Args.parse(args);
+            var jCommander = new JCommander();
+            jCommander.setProgramName(Main.PROGRAM_NAME);
+            var parsed = Args.createAndValidate(jCommander, args);
+            if (parsed.isHelp()) {
+                jCommander.usage();
+                System.exit(0);
+            }
             PDFMerger.merge(parsed.getOutputName(), parsed.getInputs());
-        } catch (ExistingOutputException e) {
+        } catch (ArgsValidationException e) {
             System.err.println(e.getMessage());
-            System.exit(-1);
-        } catch (ParameterException e) {
-            System.err.println(e.getMessage());
-            e.usage();
             System.exit(-1);
         } catch (IOException e) {
             System.err.println("Error saving output");
             System.exit(-1);
         }
 
-        System.out.println("File(s) merged successfully");
+        System.out.println("Files merged successfully");
         System.exit(0);
-    }
-
-    public static String getProgramName() {
-        return PROGRAM_NAME;
     }
 
     private static class PDFMerger {

@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import com.beust.jcommander.ParameterException;
+import com.beust.jcommander.JCommander;
 
 class ArgsTest {
 
@@ -55,47 +55,63 @@ class ArgsTest {
                              "-o " + SUFFIXED_NEW_OUTPUT + " " + INPUT1 + " " + INPUT2,
                              INPUT1 + " " + INPUT2 + " " + "-o " + NEW_OUTPUT,
                              INPUT1 + " " + INPUT2 + " " + "-o " + SUFFIXED_NEW_OUTPUT })
-    void testOutputParsedCorrectly(String cli) throws ExistingOutputException {
+    void testOutputParsedCorrectly(String cli) throws ArgsValidationException {
         String[] args = cli.split(" ");
-        Args parsed = Args.parse(args);
+        JCommander cmder = new JCommander();
+        Args parsed = Args.createAndValidate(cmder, args);
         assertEquals(SUFFIXED_NEW_OUTPUT, parsed.getOutputName());
     }
 
     @Test
-    void testNoOutputGivesDefaultName() throws ExistingOutputException {
+    void testNoOutputGivesDefaultName() throws ArgsValidationException {
         String[] args = new String[] { INPUT1, INPUT2 };
-        Args parsed = Args.parse(args);
+        JCommander cmder = new JCommander();
+        Args parsed = Args.createAndValidate(cmder, args);
         assertEquals(Args.getDefaultOutputName(), parsed.getOutputName());
     }
 
     @Test
-    void testNonExistingInputFileThrowsParameterException() {
-        assertThrows(ParameterException.class, () -> Args.parse(NOT_EXISTING_INPUT));
+    void testNonExistingInputFileThrowsArgsValidationException() {
+        JCommander cmder = new JCommander();
+        ArgsValidationException e = assertThrows(ArgsValidationException.class,
+                () -> Args.createAndValidate(cmder, NOT_EXISTING_INPUT));
+        assertEquals("Parameter Default contains files that do not exist",
+                e.getMessage());
     }
 
     @Test
     void testExistingOutputCannotBeOverriddenWithoutForce() {
         String[] args = new String[] { INPUT1, INPUT2, "-o", EXISTING_OUTPUT };
-        assertThrows(ExistingOutputException.class, () -> Args.parse(args));
+        JCommander cmder = new JCommander();
+        ArgsValidationException e = assertThrows(ArgsValidationException.class,
+                () -> Args.createAndValidate(cmder, args));
+        assertEquals("The specified output file already exists. Change name or use '-f' to force override",
+                e.getMessage());
     }
 
     @Test
-    void testExistingOutputWithForceWorks() throws ExistingOutputException {
+    void testExistingOutputWithForceWorks() throws ArgsValidationException {
         String[] args = new String[] { INPUT1, INPUT2, "-o", EXISTING_OUTPUT, "-f" };
-        Args parsed = Args.parse(args);
+        JCommander cmder = new JCommander();
+        Args parsed = Args.createAndValidate(cmder, args);
         assertEquals(EXISTING_OUTPUT, parsed.getOutputName());
     }
 
     @Test
     void testOWithoutArgumentFails() {
         String[] args = new String[] { INPUT1, INPUT2, "-o" };
-        assertThrows(ParameterException.class, () -> Args.parse(args));
+        JCommander cmder = new JCommander();
+        ArgsValidationException e = assertThrows(ArgsValidationException.class,
+                () -> Args.createAndValidate(cmder, args));
+        assertEquals("Expected a value after parameter -o", e.getMessage());
+
     }
 
     @Test
-    void testInputsConvertedSuccessfully() throws ExistingOutputException {
+    void testInputsConvertedSuccessfully() throws ArgsValidationException {
         String[] args = new String[] { INPUT1, INPUT2 };
-        Args parsed = Args.parse(args);
+        JCommander cmder = new JCommander();
+        Args parsed = Args.createAndValidate(cmder, args);
         assertTrue(parsed.getInputs().contains(new File(INPUT1)));
         assertTrue(parsed.getInputs().contains(new File(INPUT2)));
     }
@@ -103,7 +119,11 @@ class ArgsTest {
     @ParameterizedTest
     @ValueSource(strings = { "", "-o " + NEW_OUTPUT })
     void testNoInputsFails(String cli) {
-        String[] args = cli.split(" ");
-        assertThrows(ParameterException.class, () -> Args.parse(args));
+        // check for blank string, to prevent arg input of empty string. We want to simulate empty cli input = empty array
+        String[] args = cli.isBlank() ? new String[0] : cli.split(" ");
+        JCommander cmder = new JCommander();
+        ArgsValidationException e = assertThrows(ArgsValidationException.class,
+                () -> Args.createAndValidate(cmder, args));
+        assertEquals("Main parameters are required (\"\")", e.getMessage());
     }
 }

@@ -10,8 +10,6 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 
-import ch.feomathar.pdfmerge.Main;
-
 public class Args {
 
     private static final String DEFAULT_OUTPUT = "out.pdf";
@@ -28,22 +26,33 @@ public class Args {
     @Parameter(names = "-h", description = "Display this message", help = true, order = 10)
     private boolean help;
 
-    public static Args parse(String... args) throws ExistingOutputException {
-        Args parsed = new Args();
-        JCommander cmder = JCommander.newBuilder().addObject(parsed).build();
-        cmder.setProgramName(Main.getProgramName());
-        cmder.parse(args);
-        if (parsed.isHelp()) {
-            cmder.usage();
-            System.exit(0);
+    /**
+     * Creates a new Args object based on the given input array with the help of the provided JCommander
+     *
+     * The provided JCommander will have the descriptions of this class' parameters (main, '-o', '-f) added.
+     * The passed arguments will be validated and if this validation fails, this method will throw an exception.
+     * Its message will specify the reason. In case of an exception, the args should not be used!
+     *
+     * @param cmder a JCommander instance that will be used to parse the arguments
+     * @param args the array of string arguments to be parsed
+     * @return an instance containing the parsed and validated arguments
+     * @throws ArgsValidationException if the validation failed. The message will contain the reason
+     */
+    public static Args createAndValidate(JCommander cmder, String... args) throws ArgsValidationException {
+        try {
+            var parsed = new Args();
+            cmder.addObject(parsed);
+            cmder.parse(args);
+            parsed.validate();
+            return parsed;
+        } catch (ParameterException e){
+            throw new ArgsValidationException(e.getMessage());
         }
-        parsed.validate();
-        return parsed;
     }
 
-    private void validate() throws ExistingOutputException {
+    private void validate() throws ArgsValidationException {
         if (new File(getOutputName()).exists() && !isForce()) {
-            throw new ExistingOutputException();
+            throw new ArgsValidationException("The specified output file already exists. Change name or use '-f' to force override");
         }
     }
 
